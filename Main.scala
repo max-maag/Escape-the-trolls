@@ -89,7 +89,7 @@ object Main extends App {
   }
 
   Maze.parse(file) match {
-    case Success(m) => new ESTGame(m, if(useAscii) uglyPrintMaze else prettyPrintMaze)
+    case Success(m) => new ETTGame(m, if(useAscii) uglyPrintMaze else prettyPrintMaze)
     case Failure(e) =>
       System.err.println(e.getLocalizedMessage)
       sys.exit(1)

@@ -1,7 +1,7 @@
 import scala.io.StdIn
 import scala.util.Random
 
-class ESTGame(maze: Maze, printMaze: Maze => Unit) {
+class ETTGame(maze: Maze, printMaze: Maze => Unit) {
   val startingLocations = for {
     y <- 0 until maze.height
     x <- 0 until maze.width
