@@ -1,5 +1,3 @@
-import java.io.File
-
 import io.IOUtils
 
 import scala.io.Source
@@ -9,6 +7,8 @@ object Main extends App {
   private val utfCharset = Map[MazeContent, Char](
     Wall -> '\u2588',
     Empty -> ' ',
+    Goal -> '\u2573',
+    WalledGoal -> '\u2612',
     PlayerUp -> '\u25b2',
     PlayerRight -> '\u25b6',
     PlayerDown -> '\u25bc',
@@ -18,6 +18,8 @@ object Main extends App {
   private val asciiCharset = Map[MazeContent, Char](
     Wall -> '#',
     Empty -> ' ',
+    Goal -> 'X',
+    WalledGoal -> '*',
     PlayerUp -> '^',
     PlayerRight -> '>',
     PlayerDown -> 'v',
@@ -61,7 +63,6 @@ object Main extends App {
       println()
     }
 
-  println(new File(".").getAbsolutePath)
   if(args.length == 0)
     printHelpAndQuit(1)
 

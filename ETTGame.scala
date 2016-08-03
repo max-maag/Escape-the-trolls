@@ -1,11 +1,11 @@
 import scala.io.StdIn
-import scala.util.Random
+import scala.util.{Random, Try}
 
 class ETTGame(maze: Maze, printMaze: Maze => Unit) {
   val startingLocations = for {
     y <- 0 until maze.height
     x <- 0 until maze.width
-    if(!(x == maze.exitX && y == maze.exitY) && maze(x,y) == Empty)
+    if(maze(x,y) == Empty)
   } yield (x,y)
 
   val rand = new Random()
@@ -18,8 +18,6 @@ class ETTGame(maze: Maze, printMaze: Maze => Unit) {
     case 2 => PlayerDown
     case _ => PlayerLeft
   }
-
-  var quit = false
 
   sealed trait Direction {
     val dx: Int
@@ -51,34 +49,57 @@ class ETTGame(maze: Maze, printMaze: Maze => Unit) {
     val dy = 0
   }
 
-  while(!quit) {
+  var lastChar = 'x'
+
+  while(true) {
     printMaze(maze)
     print("Enter one of w,a,s,d to move, or q to quit: ")
 
-    val (dir, canMove) = StdIn.readChar() match {
+    val c = Try { StdIn.readChar() }.getOrElse(lastChar)
+    lastChar = c
+
+    val (dir, canMove) = c match {
       case 'w' => (Up, maze(playerX, playerY) == PlayerUp)
       case 'a' => (Left, maze(playerX, playerY) == PlayerLeft)
       case 's' => (Down, maze(playerX, playerY) == PlayerDown)
       case 'd' => (Right, maze(playerX, playerY) == PlayerRight)
       case 'q' => sys.exit()
+      case 'x' => (NoDirection, false)
       case c =>
         println(s"\nUnrecognised command: $c")
         (NoDirection, false)
     }
 
     if(canMove) {
-      if(maze(playerX+dir.dx, playerY+dir.dy) == Empty) {
+      val nextBlock = maze(playerX+dir.dx, playerY+dir.dy)
+      val nextNextBlock = maze(playerX+2*dir.dx, playerY+2*dir.dy)
+      if(!nextBlock.isBlocking) {
         maze(playerX+dir.dx, playerY+dir.dy) = maze(playerX, playerY)
         maze(playerX, playerY) = Empty
         playerX += dir.dx
         playerY += dir.dy
-      } else if(maze(playerX+dir.dx, playerY+dir.dy) == Wall &&
-                maze(playerX+2*dir.dx, playerY+2*dir.dy) == Empty) {
-        maze(playerX+2*dir.dx, playerY+2*dir.dy) = Wall
+
+        if(nextBlock == Goal) {
+          printMaze(maze)
+          println("You reached the exit. Congratulations, you won!")
+          sys.exit()
+        }
+      } else if(nextBlock.isBlocking && !nextNextBlock.isBlocking) {
+        if (nextNextBlock == Goal)
+          maze(playerX + 2 * dir.dx, playerY + 2 * dir.dy) = WalledGoal
+        else
+          maze(playerX + 2 * dir.dx, playerY + 2 * dir.dy) = Wall
+
         maze(playerX+dir.dx, playerY+dir.dy) = maze(playerX, playerY)
         maze(playerX, playerY) = Empty
         playerX += dir.dx
         playerY += dir.dy
+
+        if(nextBlock == WalledGoal) {
+          printMaze(maze)
+          println("You reached the exit. Congratulations, you won!")
+          sys.exit()
+        }
       }
     } else if(dir != NoDirection) {
       maze(playerX, playerY) = dir match {
@@ -87,11 +108,6 @@ class ETTGame(maze: Maze, printMaze: Maze => Unit) {
         case Right => PlayerRight
         case Down => PlayerDown
       }
-    }
-
-    if(playerX == maze.exitX && playerY == maze.exitY) {
-      println("You reached the exit. Congratulations, you won!")
-      sys.exit()
     }
   }
 }
